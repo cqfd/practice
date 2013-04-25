@@ -26,14 +26,14 @@ main(void)
             state = COMP;
             pos = tabs = 0;
         } else if (c == '\t') {
-            if (state == TAB) {
-                state = COMP;
+            if (state == COMP) {
+                state = TAB;
                 tabs = 0;
             }
 
             ++tabs;
         } else {
-            if (c != ' ' && state == COMP) {
+            if (c != ' ' && state == TAB) {
                 int spaces = tabs * TABSTOP - pos % TABSTOP;
                 while (spaces > 0) {
                     putchar(' ');
@@ -41,7 +41,7 @@ main(void)
                 }
 
                 pos = 0;
-                state = TAB;
+                state = COMP;
             }
 
             putchar(c);
