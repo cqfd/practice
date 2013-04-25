@@ -33,7 +33,7 @@ main(void)
 
             ++tabs;
         } else {
-            if (c != ' ' && state == TAB) {
+            if (state == TAB) {
                 int spaces = tabs * TABSTOP - pos % TABSTOP;
                 while (spaces > 0) {
                     putchar(' ');
