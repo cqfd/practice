@@ -68,6 +68,30 @@ let rev xs =
 
 rev [`a; `b; `c] = [`c; `b; `a];;
 
+(* 21. Insert an element at a given position into a list. Start counting
+ * list elements with 0. *)
+let rec insert_at x pos xs = match pos with
+    0 -> x :: xs
+  | n -> List.hd xs :: insert_at x (n-1) (List.tl xs)
+;;
+
+insert_at `alfa 1 [`a; `b; `c; `d] = [`a; `alfa; `b; `c; `d];;
+
+(* 22. Create a list containing all integers within a given range. If the first
+ * argument is smaller than the second, produce a list in decreasing order. *)
+let rec range m n =
+  if m = n then
+    [n]
+  else
+    if m < n then
+      m :: range (m+1) n
+    else
+      m :: range (m-1) n
+;;
+
+range 4 9 = [4; 5; 6; 7; 8; 9];;
+range 9 4 = [9; 8; 7; 6; 5; 4];;
+
 
 (*** ARITHMETIC ********************************************************)
 
@@ -112,3 +136,49 @@ not (is_prime 1);;
 is_prime 7;;
 not (is_prime 12);;
 not (is_prime 25);;
+
+(* 2. Determine the greatest common divisor of two positive integer numbers.
+ * Use Euclid's algorithm. *)
+
+let rec gcd a b = if b = 0 then a else gcd b (a mod b);;
+
+gcd 13 27 = 1;;
+gcd 20536 7826 = 2;;
+
+(* 3. Determine whether two positive integer numbers are coprime. Two
+ * numbers are coprime if their greatest common divisor equals 1. *)
+let coprime a b = gcd a b = 1;;
+
+coprime 13 27;;
+not (coprime 20536 7826);;
+
+(* 4. Calculate Euler's totient function phi(m). Euler's so-called totient
+ * function phi(m) is defined as the number of positive integers
+ * r (1 <= r < m) that are coprime to m. We let phi(1) = 1.
+ *
+ * Find out what the value of phi(m) is if m is a prime number. Euler's
+ * totient function plays an important role in one of the most widely
+ * used public key crypotography methods (RSA). In this exercise you should
+ * use the most primitive method to calculate this function (there are
+ * smarter ways that we shall discuss later). *)
+let phi m =
+  List.length (List.filter (fun n -> gcd n m = 1) (range 1 m));;
+
+phi 10 = 4;;
+phi 13 = 12;;
+
+(* 5. Determine the prime factors of a given positive integer. Construct a
+ * flat list containing the prime factors in ascending order. *)
+let factors n =
+  let rec aux k m =
+    if k = n then
+      []
+    else
+      if m mod k = 0 then
+	k :: aux k (m / k)
+      else
+	aux (k+1) m in
+  aux 2 n
+;;
+
+factors 315 = [3; 3; 5; 7];;
