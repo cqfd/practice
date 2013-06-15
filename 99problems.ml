@@ -89,3 +89,26 @@ not (is_prime 1);;
 is_prime 7;;
 not (is_prime 12);;
 not (is_prime 25);;
+
+(* sieve of eratosthenes *)
+let sieve n =
+  if n < 2 then raise (Invalid_argument (string_of_int n)) else
+    let range =
+      let rec make_list k acc =
+	if k > 1 then make_list (k-1) (k :: acc) else acc in
+      make_list n [] in
+    let rec aux k ys =
+      let excess = List.filter (fun x -> x mod k <> 0) ys in
+      if k < n && (List.length ys) > 0 then
+	k :: aux (List.hd excess) (List.tl excess)
+      else
+	[k] in
+    aux 2 range 
+;;
+
+let is_prime n = n = List.hd (List.rev (sieve n));;
+
+not (is_prime 1);;
+is_prime 7;;
+not (is_prime 12);;
+not (is_prime 25);;
