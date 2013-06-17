@@ -60,13 +60,67 @@ length [] = 0;;
 
 (* 5. Reverse a list. *)
 let rev xs =
-  let rec tail ys acc = function
+  let rec tail ys acc = match ys with
       [] -> acc
-    | y :: ys' -> tail (y :: acc) ys'
+    | y :: ys' -> tail ys' (y :: acc)
   in tail xs []
 ;;
 
 rev [`a; `b; `c] = [`c; `b; `a];;
+
+(* 6. Find out whether a list is a palindrome. A palindrome is its
+ * own reverse *)
+let rec is_palindrome xs =
+  if xs = rev xs then true else false
+;;
+
+is_palindrome [`x; `a; `m; `a; `x];;
+not (is_palindrome [`a; `b]);;
+
+(* 7. Flatten a nested structure. *)
+
+(* There is no nested list type in OCaml, so we need to define one first. A
+ * node of a nested list is either an element, or a list of nodes. *)
+type 'a node =
+| One of 'a
+| Many of 'a node list
+;;
+
+let rec flatten = function
+  | [] -> []
+  | One x :: xs -> x :: flatten xs
+  | Many xs :: ys -> flatten xs @ flatten ys
+;;
+
+flatten [One `a; Many [One `b; Many [One `c; One `d]; One `e]];;
+
+(* 8. Eliminate consecutive duplicates of list elements. *)
+let rec compress = function
+  | [] -> []
+  | [x] -> [x]
+  | x :: xs -> if x = List.hd xs then compress xs else x :: (compress xs)
+;;
+
+compress [`a;`a;`a;`a;`b;`c;`c;`a;`a;`d;`e;`e;`e;`e] = [`a;`b;`c;`a;`d;`e];;
+
+(* 19. Rotate a list N places to the left. *)
+let rotate xs n =
+  let rec aux left right = function
+    | 0 -> right @ (List.rev left)
+    | m -> aux (List.hd right :: left) (List.tl right) (m-1) in
+  if n < 0 then List.rev (aux [] (List.rev xs) (-n)) else aux [] xs n
+;;
+
+rotate [`a;`b;`c;`d;`e;`f;`g;`h] 3 = [`d;`e;`f;`g;`h;`a;`b;`c];;
+rotate [`a;`b;`c;`d;`e;`f;`g;`h] (-2) = [`g;`h;`a;`b;`c;`d;`e;`f];;
+
+(* 20. Remove the n'th element from a list. *)
+let rec remove_at n xs = match n with
+    0 -> List.tl xs
+  | m -> List.hd xs :: remove_at (m-1) (List.tl xs)
+;;
+
+remove_at 1 [`a; `b; `c; `d] = [`a; `c; `d];;
 
 (* 21. Insert an element at a given position into a list. Start counting
  * list elements with 0. *)
