@@ -103,6 +103,134 @@ let rec compress = function
 
 compress [`a;`a;`a;`a;`b;`c;`c;`a;`a;`d;`e;`e;`e;`e] = [`a;`b;`c;`a;`d;`e];;
 
+(* 9. Pack consecutive duplicates of list elements into sublists. *)
+let rec pack xs =
+  let rec split acc = function
+    | y :: ys when y = List.hd acc -> split (y :: acc) ys
+    | ys -> acc, ys in match xs with
+      [] -> []
+      | h :: t -> let a, b = split [h] t in
+		  a :: (pack b)
+;;
+
+pack [`a; `a; `a; `a; `b; `c; `c; `a; `a; `d; `d; `e; `e; `e; `e] =
+  [[`a; `a; `a; `a]; [`b]; [`c; `c]; [`a; `a]; [`d; `d]; [`e; `e; `e; `e]];;
+
+(* 10. Run-length encoding of a list *)
+let encode xs =
+  let xs' = pack xs in
+  List.map (fun ys -> (List.length ys, List.hd ys)) xs'
+;;
+
+encode [`a; `a; `a; `a; `b; `c; `c; `a; `a; `d; `d; `e; `e; `e; `e] =
+  [4,`a; 1,`b; 2,`c; 2,`a; 2,`d; 4,`e];;
+
+(* 11. Modified run-length encoding -- Modify the result of the previous
+ * problem in such a way that if an element has no duplicates it is simply
+ * copied into the result list. Only elements with duplicates are
+ * transferred as (N E) lists.
+ *
+ * Since OCaml lists are homogeneous, one needs to define a type to hold
+ * both single elements and sub-lists. *)
+type 'a rle =
+| One of 'a
+| Many of (int * 'a)
+;;
+
+let mencode xs =
+  let aux (n, e) = if n = 1 then One e else Many (n, e) in
+  List.map aux (encode xs)
+;;
+
+mencode [`a;`a;`a;`a;`b;`c;`c;`a;`a;`d;`e;`e;`e;`e] =
+  [Many (4,`a) ; One `b ; Many (2,`c) ; Many (2,`a) ; One `d ; Many (4,`e)];;
+
+(* 12. Decode a run-length encoded list. Given a run-length code list
+ * generated as specified in the previous problem, construct its
+ * uncompressed version. *)
+let decode xs =
+  let rec aux = function
+    | One e -> [e]
+    | Many (n, e) -> e :: aux (if n = 2 then One e else Many (n-1, e)) in
+  List.flatten (List.map aux xs)
+;;
+
+decode [Many (4,`a); One `b; Many (2,`c); Many (2,`a); One `d; Many (4,`e)]
+  = [`a;`a;`a;`a;`b;`c;`c;`a;`a;`d;`e;`e;`e;`e];;
+
+(* 13. Run-length encoding of a list (direct solution). *)
+let rec encode xs =
+  let f n e = if n = 1 then One e else Many (n,e) in
+  let rec aux n e = function
+    | [] -> [f n e]
+    | y :: ys ->
+      if y = e then
+	aux (n+1) e ys
+      else
+	f n e :: aux 1 y ys in
+  aux 1 (List.hd xs) (List.tl xs)
+;;
+
+encode [`a;`a;`a;`a;`b;`c;`c;`a;`a;`d;`e;`e;`e;`e] =
+  [Many (4,`a); One `b; Many (2,`c); Many (2,`a); One `d; Many (4,`e)];;
+
+(* 14. Duplicate the elements of a list. *)
+let rec duplicate = function
+  | [] -> []
+  | x :: xs -> x :: x :: duplicate xs
+;;
+
+duplicate [`a;`b;`c;`c;`d] = [`a;`a;`b;`b;`c;`c;`c;`c;`d;`d];;
+
+(* 15. Replicate the elements of a list a given number of times. *)
+let replicate xs n =
+  let rec repel e = function
+    | 0 -> []
+    | m -> e :: repel e (m-1) in
+  let rec repal n = function
+      [] -> []
+    | h :: t -> repel h n :: repal n t in
+  List.flatten (repal n xs)
+;;
+
+(* 16. Drop every n'th element from a list. *)
+let drop xs n =
+  let rec aux m = function
+    | [] -> []
+    | y :: ys -> if m = 1 then aux n ys else y :: aux (m-1) ys in
+  aux n xs
+;;
+
+drop [`a;`b;`c;`d;`e;`f;`g;`h;`i;`j] 3 = [`a;`b;`d;`e;`g;`h;`j];;
+
+(* 17. Split a list into two pars; the length of the first part is given.
+ * If the length of the first part is longer than the entire list, then
+ * the first part is the list and the second part is empty. *)
+let split xs n =
+  let rec aux acc rest m = match rest with
+      _ when rest = [] || m = 0 -> (List.rev acc, rest)
+    | y :: ys -> aux (y :: acc) ys (m-1) in
+  aux [] xs n
+;;
+
+split [`a;`b;`c;`d;`e;`f;`g;`h;`i;`j] 3
+  = ([`a;`b;`c] , [`d;`e;`f;`g;`h;`i;`j]);;
+
+split [`a;`b;`c;`d] 5 = ([`a; `b; `c; `d], []);;
+
+(* 18. Extract a slice from a list. Given two indices, i and k, the slice
+ * is the list containing the elements between the i'th and k'th element
+ * of the original list (both limits included). Start counting the elements
+ * with 0 (this is the way the List module numbers elements). *)
+let rec slice xs min max =
+  if min > 0 then slice (List.tl xs) (min-1) (max-1)
+  else if max > 0 then (List.hd xs) :: slice (List.tl xs) 0 (max-1)
+  else [List.hd xs]
+;;
+
+slice [`a;`b;`c;`d;`e;`f;`g;`h;`i;`j] 2 6 = [`c;`d;`e;`f;`g];;
+
+
 (* 19. Rotate a list N places to the left. *)
 let rotate xs n =
   let rec aux left right = function
@@ -131,8 +259,9 @@ let rec insert_at x pos xs = match pos with
 
 insert_at `alfa 1 [`a; `b; `c; `d] = [`a; `alfa; `b; `c; `d];;
 
-(* 22. Create a list containing all integers within a given range. If the first
- * argument is smaller than the second, produce a list in decreasing order. *)
+(* 22. Create a list containing all integers within a given range. If the
+ * first argument is smaller than the second, produce a list in
+ * decreasing order. *)
 let rec range m n =
   if m = n then
     [n]
